@@ -1,0 +1,24 @@
+AUDIO FEATURE ANALYSIS REPORT
+==================================================
+
+Total audio samples processed: 25
+Unique members: 3
+Unique phrases: 3
+Augmentations applied: 5
+
+Member Statistics:
+  member2: 10 samples
+  member1: 10 samples
+  unauthorized: 5 samples
+
+Feature Statistics:
+  mfcc_0_mean: mean=-344.4295, std=68.0304
+  mfcc_1_mean: mean=71.6128, std=34.5062
+  mfcc_2_mean: mean=-29.4072, std=27.8166
+  mfcc_3_mean: mean=9.6884, std=7.5051
+  mfcc_4_mean: mean=-12.4572, std=12.1757
+  mfcc_5_mean: mean=-3.5624, std=8.9881
+  mfcc_6_mean: mean=-1.0938, std=9.8425
+  mfcc_7_mean: mean=-10.8059, std=13.3404
+  mfcc_8_mean: mean=-10.4429, std=4.0022
+  mfcc_9_mean: mean=-2.1566, std=7.2392
