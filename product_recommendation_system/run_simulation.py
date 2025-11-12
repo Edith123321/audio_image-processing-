@@ -2,188 +2,112 @@
 import sys
 import os
 import numpy as np
-import joblib
-from sklearn.preprocessing import StandardScaler
 
 # Add src to path
 sys.path.append('src')
 
-def check_models_exist():
-    """Check if all required model files exist and are valid"""
+def check_data_files():
+    """Check if required data files exist"""
     required_files = [
-        'models/facial_recognition_model.pkl',
-        'models/voice_verification_model.pkl', 
-        'models/product_recommendation_model.pkl',
-        'models/facial_scaler.pkl',
-        'models/voice_scaler.pkl',
-        'models/product_scaler.pkl'
+        'data/external/images/member1/neutral.jpg',
+        'data/external/images/member1/smiling.jpg', 
+        'data/external/images/member2/neutral.jpg',
+        'data/external/images/unauthorized/unauthorized_face.jpg',
+        'data/external/audio/member1/yes_approve.wav',
+        'data/external/audio/member2/yes_approve.wav',
+        'data/external/audio/unauthorized/unauthorized_voice.wav'
     ]
     
     missing_files = []
-    corrupted_files = []
-    
     for file_path in required_files:
         if not os.path.exists(file_path):
             missing_files.append(file_path)
-        else:
-            # Check if file can be loaded
-            try:
-                joblib.load(file_path)
-            except Exception as e:
-                corrupted_files.append(f"{file_path} ({str(e)})")
     
     if missing_files:
-        print("❌ Missing model files:")
+        print("❌ Missing data files:")
         for f in missing_files:
             print(f"   - {f}")
+        return False
     
-    if corrupted_files:
-        print("❌ Corrupted model files:")
-        for f in corrupted_files:
-            print(f"   - {f}")
-    
-    return len(missing_files) == 0 and len(corrupted_files) == 0
+    print("✅ All required data files exist!")
+    return True
 
-def create_fallback_simulator():
-    """Create a fallback simulator when models are missing"""
-    print("⚠️  Using fallback simulation mode (models not available)")
+def create_test_images():
+    """Create test images if they don't exist"""
+    import cv2
+    import numpy as np
     
-    class FallbackSimulator:
-        def facial_authentication(self, image_path):
-            print("🔍 Starting facial recognition...")
-            print("✅ Facial authentication successful! (fallback)")
-            return True, "member1"
-        
-        def voice_verification(self, audio_path):
-            print("🎤 Starting voice verification...")
-            print("✅ Voice verification successful! (fallback)")
-            return True
-        
-        def product_recommendation(self, user_data):
-            print("📊 Generating product recommendation...")
-            recommendation = "Electronics"
-            print(f"Recommended Product: {recommendation} (Confidence: 0.95)")
-            return recommendation
-        
-        def simulate_transaction(self, image_path, audio_path, user_data):
-            print("🚀 Starting transaction simulation...")
-            print("=" * 50)
-            
-            # Step 1: Facial Recognition
-            face_auth, user_id = self.facial_authentication(image_path)
-            if not face_auth:
-                print("❌ ACCESS DENIED: Facial recognition failed")
-                return None
-            
-            # Step 2: Voice Verification
-            voice_auth = self.voice_verification(audio_path)
-            if not voice_auth:
-                print("❌ ACCESS DENIED: Voice verification failed")
-                return None
-            
-            # Step 3: Product Recommendation
-            if face_auth and voice_auth:
-                recommendation = self.product_recommendation(user_data)
-                print(f"🎉 TRANSACTION APPROVED! Recommended product: {recommendation}")
-                print("=" * 50)
-                return recommendation
-            else:
-                print("❌ TRANSACTION DENIED!")
-                print("=" * 50)
-                return None
+    # Create directories
+    os.makedirs('data/external/images/member1', exist_ok=True)
+    os.makedirs('data/external/images/member2', exist_ok=True) 
+    os.makedirs('data/external/images/unauthorized', exist_ok=True)
+    os.makedirs('data/external/audio/member1', exist_ok=True)
+    os.makedirs('data/external/audio/member2', exist_ok=True)
+    os.makedirs('data/external/audio/unauthorized', exist_ok=True)
     
-    return FallbackSimulator()
+    # Create simple test images
+    for member in ['member1', 'member2']:
+        for expression in ['neutral', 'smiling', 'surprised']:
+            img_path = f'data/external/images/{member}/{expression}.jpg'
+            if not os.path.exists(img_path):
+                # Create a simple colored image
+                img = np.random.randint(0, 255, (200, 200, 3), dtype=np.uint8)
+                cv2.imwrite(img_path, img)
+                print(f"✅ Created test image: {img_path}")
+    
+    # Create unauthorized face
+    unauthorized_path = 'data/external/images/unauthorized/unauthorized_face.jpg'
+    if not os.path.exists(unauthorized_path):
+        img = np.random.randint(0, 255, (200, 200, 3), dtype=np.uint8)
+        cv2.imwrite(unauthorized_path, img)
+        print(f"✅ Created unauthorized image: {unauthorized_path}")
 
-def simulate_authorized_transaction(simulator):
-    """Simulate a successful transaction with authorized user"""
-    print("🧪 SIMULATING AUTHORIZED TRANSACTION")
-    print("=" * 50)
+def create_test_audio():
+    """Create test audio files if they don't exist"""
+    import soundfile as sf
+    import numpy as np
     
-    # Use authorized user's data
-    image_path = 'data/external/images/member1/neutral.jpg'
-    audio_path = 'data/external/audio/member1/yes_approve.wav'
+    # Sample rate
+    sr = 22050
     
-    # Sample user data for product recommendation (based on your dataset features)
-    user_data = np.array([
-        82,    # engagement_score (from Twitter user)
-        4.8,   # purchase_interest_score  
-        3,     # social_media_platform_encoded (Twitter)
-        1,     # review_sentiment_encoded (Neutral)
-        332,   # purchase_amount
-        4.2,   # customer_rating
-        1,     # purchase_month (January)
-        1,     # purchase_weekday (Monday)
-        0      # engagement_purchase_ratio (will be calculated)
-    ])
+    for member in ['member1', 'member2']:
+        for phrase in ['yes_approve', 'confirm_transaction']:
+            audio_path = f'data/external/audio/{member}/{phrase}.wav'
+            if not os.path.exists(audio_path):
+                # Create simple audio (sine wave)
+                duration = 2.0  # seconds
+                t = np.linspace(0, duration, int(sr * duration))
+                frequency = 440 if member == 'member1' else 550  # Different frequencies
+                audio = 0.3 * np.sin(2 * np.pi * frequency * t)
+                sf.write(audio_path, audio, sr)
+                print(f"✅ Created test audio: {audio_path}")
     
-    print("🔑 Starting authentication process...")
-    recommendation = simulator.simulate_transaction(image_path, audio_path, user_data)
-    return recommendation
-
-def simulate_unauthorized_attempt(simulator):
-    """Simulate an unauthorized attempt"""
-    print("\n🚫 SIMULATING UNAUTHORIZED ATTEMPT")
-    print("=" * 50)
-    
-    # Use unauthorized data
-    image_path = 'data/external/images/unauthorized/unauthorized_face.jpg'
-    audio_path = 'data/external/audio/unauthorized/unauthorized_voice.wav'
-    
-    # Sample user data
-    user_data = np.array([
-        50,    # engagement_score
-        2.0,   # purchase_interest_score  
-        0,     # social_media_platform_encoded
-        0,     # review_sentiment_encoded
-        200,   # purchase_amount
-        1.0,   # customer_rating
-        1,     # purchase_month
-        1,     # purchase_weekday
-        0      # engagement_purchase_ratio
-    ])
-    
-    print("🔑 Starting authentication process...")
-    recommendation = simulator.simulate_transaction(image_path, audio_path, user_data)
-    return recommendation
+    # Create unauthorized audio
+    unauthorized_audio = 'data/external/audio/unauthorized/unauthorized_voice.wav'
+    if not os.path.exists(unauthorized_audio):
+        duration = 2.0
+        t = np.linspace(0, duration, int(sr * duration))
+        audio = 0.3 * np.sin(2 * np.pi * 300 * t)  # Different frequency
+        sf.write(unauthorized_audio, audio, sr)
+        print(f"✅ Created unauthorized audio: {unauthorized_audio}")
 
 def main():
-    print("🚀 PRODUCT RECOMMENDATION SYSTEM - DEMONSTRATION")
-    print("=" * 60)
+    print("🛠️  SETTING UP SIMULATION ENVIRONMENT")
+    print("=" * 50)
     
-    # Check if models exist and are valid
-    if not check_models_exist():
-        print("\n⚠️  Some model files are missing or corrupted.")
-        print("Using fallback simulation mode...")
-        simulator = create_fallback_simulator()
-    else:
-        print("✅ All model files are valid!")
-        try:
-            from system_simulation import SystemSimulator
-            simulator = SystemSimulator('models')
-            print("✅ System simulator initialized successfully!")
-        except Exception as e:
-            print(f"❌ Error initializing simulator: {e}")
-            print("Using fallback simulation mode...")
-            simulator = create_fallback_simulator()
+    # Create test data if needed
+    print("📁 Creating test data files...")
+    create_test_images()
+    create_test_audio()
     
-    # Successful transaction
-    result1 = simulate_authorized_transaction(simulator)
+    # Check if data files exist
+    if not check_data_files():
+        print("❌ Please create the missing data files first")
+        return
     
-    print("\n" + "=" * 60)
-    
-    # Unauthorized attempt
-    result2 = simulate_unauthorized_attempt(simulator)
-    
-    print("\n" + "=" * 60)
-    print("🎯 DEMONSTRATION COMPLETE")
-    print("=" * 60)
-    
-    if result1:
-        print(f"✅ Authorized transaction result: {result1}")
-    if not result2:
-        print("✅ Unauthorized attempt correctly blocked")
-    else:
-        print("❌ Unauthorized attempt was incorrectly approved")
+    print("\n✅ Simulation environment is ready!")
+    print("🎮 Now run: python main.py")
+    print("📊 Then run: python run_demonstration.py")
 
 if __name__ == "__main__":
     main()
